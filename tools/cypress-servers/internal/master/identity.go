@@ -379,12 +379,6 @@ func (s *masterState) handleAuthRegister(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// rate limit only applies to actual new registrations
-	if !s.rl.check(ip, "register", 2, 24*time.Hour) {
-		errResp(w, 429, "Rate limited — max 2 registrations per IP per day")
-		return
-	}
-
 	// check hwid hasn't already registered
 	var existing string
 	err = s.db.QueryRow("SELECT account_id FROM accounts WHERE hwid_hash = ?", hwidHash).Scan(&existing)
@@ -405,6 +399,12 @@ func (s *masterState) handleAuthRegister(w http.ResponseWriter, r *http.Request)
 	err = s.db.QueryRow("SELECT account_id FROM accounts WHERE username = ?", username).Scan(&existing)
 	if err == nil {
 		errResp(w, 409, "Username already taken")
+		return
+	}
+
+	// only count requests that made it past the duplicate/banned checks
+	if !s.rl.check(ip, "register", 2, 24*time.Hour) {
+		errResp(w, 429, "Rate limited: max 2 registrations per IP per day")
 		return
 	}
 
