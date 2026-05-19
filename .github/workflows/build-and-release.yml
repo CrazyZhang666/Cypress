@@ -41,7 +41,7 @@ jobs:
           cmake --build build --config Release
 
       - name: Upload DLL
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: cypress_${{ matrix.game }}
           path: Server/build/Release/cypress_${{ matrix.game }}.dll
@@ -62,7 +62,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Download server DLLs
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v7
         with:
           path: publish/CypressLauncher
           merge-multiple: true
@@ -90,8 +90,8 @@ jobs:
         shell: pwsh
         run: |
           $stage = "publish/CypressLauncher"
-          Copy-Item "Launcher/tools" $stage -Recurse -Force
-          Copy-Item "Launcher/patches" $stage -Recurse -Force
+          if (Test-Path "Launcher/tools")   { Copy-Item "Launcher/tools"   $stage -Recurse -Force }
+          if (Test-Path "Launcher/patches") { Copy-Item "Launcher/patches" $stage -Recurse -Force }
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
